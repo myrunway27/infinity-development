@@ -214,6 +214,11 @@ body.menu-open { overflow: hidden; }
 }
 .hero-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 26px; }
 .hero-actions .btn { height: var(--hero-btn-h); padding: 0 18px; }
+.hero-mail {
+  margin-top: 16px; font-size: 13px; letter-spacing: 0.04em;
+  color: #9a9a9a; text-decoration: none; transition: color 0.3s ease;
+}
+.hero-mail:hover { color: #ffffff; }
 .hero-actions .btn-ghost {
   background: linear-gradient(135deg, rgba(255,255,255,0.12), rgba(0,0,0,0.5) 46%, rgba(150,170,200,0.1));
   border: 1px solid rgba(198,198,198,0.55);
@@ -413,6 +418,7 @@ body.menu-open { overflow: hidden; }
         <a class="btn btn-solid appear appear--btn" href="mailto:info@infdev.dev" style="--d:0.96s">Start a project</a>
         <a class="btn btn-ghost appear appear--side" href="#top" style="--d:1.10s">See what we do</a>
       </div>
+      <a class="hero-mail appear appear--soft" href="mailto:info@infdev.dev" style="--d:1.22s">info@infdev.dev</a>
     </div>
   </main>
 
