@@ -375,6 +375,7 @@ mkdirSync(resolve(ROOT, "dist/assets"), { recursive: true });
 writeFileSync(resolve(ROOT, "dist/index.html"), page);
 copyFileSync(resolve(ROOT, "assets/styles.css"), resolve(ROOT, "dist/assets/styles.css"));
 copyFileSync(resolve(ROOT, "landing.html"), resolve(ROOT, "dist/landing.html"));
+writeFileSync(resolve(ROOT, "dist/CNAME"), "www.infdev.dev\n");
 mkdirSync(resolve(ROOT, "dist/assets/img"), { recursive: true });
 for (const f of readdirSync(resolve(ROOT, "assets/img")))
   copyFileSync(resolve(ROOT, "assets/img", f), resolve(ROOT, "dist/assets/img", f));
