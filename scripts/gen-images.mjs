@@ -18,8 +18,8 @@ mkdirSync(OUT, { recursive: true });
 const SPECS = [
   { name: "hero",        w: 1800, h: 1100, style: "office" },
   { name: "svc-code",    w: 900,  h: 675,  style: "code" },
-  { name: "svc-cloud",   w: 900,  h: 675,  style: "corridor" },
-  { name: "svc-sec",     w: 900,  h: 675,  style: "circuit" },
+  { name: "svc-cloud",   w: 900,  h: 675,  style: "satmap" },
+  { name: "svc-sec",     w: 900,  h: 675,  style: "rain" },
   { name: "svc-ai",      w: 900,  h: 675,  style: "neural" },
   { name: "svc-ops",     w: 900,  h: 675,  style: "ops" },
   { name: "dz-research", w: 900,  h: 765,  style: "research" },
@@ -288,6 +288,81 @@ const DRAW = String(function draw(ctx, W, H, style, rand) {
     ctx.strokeStyle = TL(.4); ctx.lineWidth = 2;
     ctx.beginPath(); ctx.arc(px, H * .74, 34, -0.7, 0.8); ctx.stroke();
     ctx.globalCompositeOperation = "lighter"; glow(W * .5, H * .32, W * .5, "44,177,188", .1);
+    ctx.globalCompositeOperation = "source-over";
+    finish(true);
+  }
+
+  /* ---- satellite night-map: glowing settlements seen from orbit ---- */
+  if (style === "satmap") {
+    const g = ctx.createLinearGradient(0, 0, W, H);
+    g.addColorStop(0, "#060A0E"); g.addColorStop(1, "#0A1216");
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    // faint landmass sheen
+    ctx.filter = "blur(40px)";
+    for (let i = 0; i < 6; i++) glow(W * (.15 + R() * .7), H * (.2 + R() * .6), 140 + R() * 160, "40,70,80", .1);
+    ctx.filter = "none";
+    // metro centres with sprawl
+    const metros = [];
+    for (let m = 0; m < 13; m++) metros.push({ x: W * (.08 + R() * .84), y: H * (.1 + R() * .8), s: .5 + R() });
+    // faint corridors between neighbouring metros
+    ctx.lineCap = "round";
+    for (const a of metros) for (const b of metros) {
+      const d = Math.hypot(a.x - b.x, a.y - b.y);
+      if (d > 60 && d < W * .34 && R() < .5) {
+        ctx.strokeStyle = "rgba(255,214,150," + (.05 + R() * .05) + ")"; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+        for (let t = .15; t < .9; t += .08 + R() * .1) { // towns along the corridor
+          const px = a.x + (b.x - a.x) * t + (R() - .5) * 14, py = a.y + (b.y - a.y) * t + (R() - .5) * 14;
+          ctx.fillStyle = "rgba(255,224,180," + (.2 + R() * .4) + ")"; ctx.fillRect(px, py, 1.4, 1.4);
+        }
+      }
+    }
+    for (const m of metros) {
+      ctx.globalCompositeOperation = "lighter";
+      glow(m.x, m.y, 34 * m.s, "255,206,130", .5); glow(m.x, m.y, 90 * m.s, "255,190,110", .12);
+      if (R() < .4) glow(m.x + 20, m.y - 10, 50 * m.s, "95,203,211", .1);
+      ctx.globalCompositeOperation = "source-over";
+      const n = 120 * m.s;
+      for (let i = 0; i < n; i++) { // sprawl dots decaying from the core
+        const ang = R() * 6.283, rad = Math.pow(R(), 1.7) * 85 * m.s;
+        const px = m.x + Math.cos(ang) * rad * 1.25, py = m.y + Math.sin(ang) * rad;
+        ctx.fillStyle = R() < .88 ? "rgba(255,226,180," + (.25 + R() * .55) + ")" : TL(.5 + R() * .4);
+        const sz = R() < .92 ? 1.2 : 2.2; ctx.fillRect(px, py, sz, sz);
+      }
+    }
+    // scattered lone settlements
+    for (let i = 0; i < 260; i++) {
+      ctx.fillStyle = "rgba(255,224,175," + (.08 + R() * .3) + ")";
+      ctx.fillRect(R() * W, R() * H, 1.1, 1.1);
+    }
+    finish(true);
+  }
+
+  /* ---- code rain: falling glyph columns in the brand teal ---- */
+  if (style === "rain") {
+    ctx.fillStyle = "#070C0C"; ctx.fillRect(0, 0, W, H);
+    const glyphs = "01<>[]{}#$%&*+=/\\|;:~^";
+    for (let col = 0; col < W / 21; col++) {
+      const x = col * 21 + 4, deep = R() < .3;
+      ctx.filter = deep ? "blur(2.4px)" : (R() < .25 ? "blur(1px)" : "none");
+      const heads = 1 + Math.floor(R() * 2);
+      for (let hI = 0; hI < heads; hI++) {
+        const headY = R() * H * 1.2, len = 7 + Math.floor(R() * 22);
+        ctx.font = (deep ? 15 : 19) + "px monospace";
+        for (let k = 0; k < len; k++) {
+          const y = headY - k * (deep ? 17 : 22);
+          if (y < -20 || y > H + 20) continue;
+          const fade = 1 - k / len;
+          if (k === 0) ctx.fillStyle = "rgba(210,248,246," + (deep ? .5 : .95) + ")";
+          else if (k === 1) ctx.fillStyle = TL((deep ? .4 : .8) * fade);
+          else ctx.fillStyle = T((deep ? .3 : .6) * fade * (.4 + R() * .6));
+          ctx.fillText(glyphs[Math.floor(R() * glyphs.length)], x, y);
+        }
+        if (!deep && R() < .5) { ctx.globalCompositeOperation = "lighter"; glow(x + 6, headY, 22, "95,203,211", .25); ctx.globalCompositeOperation = "source-over"; }
+      }
+    }
+    ctx.filter = "none";
+    ctx.globalCompositeOperation = "lighter"; glow(W * .5, H * .42, W * .45, "44,177,188", .1);
     ctx.globalCompositeOperation = "source-over";
     finish(true);
   }
